@@ -133,7 +133,7 @@ resource "null_resource" "k3s_nginx_config" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt update",
-      "sudo apt install nginx",
+      "sudo apt install nginx -y",
       "sudo mv /tmp/nginx.conf /etc/nginx/nginx.conf",
       "sudo systemctl restart nginx.service",
     ]
