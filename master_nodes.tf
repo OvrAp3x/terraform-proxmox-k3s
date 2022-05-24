@@ -4,13 +4,15 @@ resource "macaddress" "k3s-masters" {
 
 locals {
   master_node_settings = defaults(var.master_node_settings, {
-    cores        = 2
-    sockets      = 1
-    memory       = 4096
-    storage_type = "scsi"
-    storage_id   = "local-lvm"
-    disk_size    = "20G"
-    user         = "k3s"
+    cores          = 2
+    sockets        = 1
+    memory         = 4096
+    storage_type   = "scsi"
+    storage_id     = "local-lvm"
+    disk_size      = "20G"
+    user           = "k3s"
+    network_bridge = "vmbr0"
+    network_tag    = -1
   })
 
   master_node_ips = [for i in range(var.master_nodes_count) : cidrhost(var.control_plane_subnet, i + 1)]
@@ -40,6 +42,8 @@ resource "proxmox_vm_qemu" "k3s-master" {
   sockets = local.master_node_settings.sockets
   memory  = local.master_node_settings.memory
 
+  agent = 1
+
   disk {
     type    = local.master_node_settings.storage_type
     storage = local.master_node_settings.storage_id
@@ -47,16 +51,24 @@ resource "proxmox_vm_qemu" "k3s-master" {
   }
 
   network {
-    bridge    = "vmbr0"
+    bridge    = local.master_node_settings.network_bridge
     firewall  = true
     link_down = false
     macaddr   = upper(macaddress.k3s-masters[count.index].address)
     model     = "virtio"
     queues    = 0
     rate      = 0
-    tag       = -1
+    tag       = local.master_node_settings.network_tag
   }
 
+  lifecycle {
+    ignore_changes = [
+      ciuser,
+      sshkeys,
+      disk,
+      network
+    ]
+  }
 
   os_type = "cloud-init"
 
@@ -65,6 +77,8 @@ resource "proxmox_vm_qemu" "k3s-master" {
   ipconfig0 = "ip=${local.master_node_ips[count.index]}/${local.lan_subnet_cidr_bitnum},gw=${var.network_gateway}"
 
   sshkeys = file(var.authorized_keys_file)
+
+  nameserver = var.nameserver
 
   connection {
     type = "ssh"
@@ -88,6 +102,8 @@ resource "proxmox_vm_qemu" "k3s-master" {
           user     = "k3s"
           password = random_password.k3s-master-db-password.result
         }]
+
+        http_proxy  = var.http_proxy
       })
     ]
   }

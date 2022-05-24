@@ -67,15 +67,17 @@ variable "proxmox_resource_pool" {
 
 variable "support_node_settings" {
   type = object({
-    cores        = optional(number),
-    sockets      = optional(number),
-    memory       = optional(number),
-    storage_type = optional(string),
-    storage_id   = optional(string),
-    disk_size    = optional(string),
-    user         = optional(string),
-    db_name      = optional(string),
-    db_user      = optional(string),
+    cores          = optional(number),
+    sockets        = optional(number),
+    memory         = optional(number),
+    storage_type   = optional(string),
+    storage_id     = optional(string),
+    disk_size      = optional(string),
+    user           = optional(string),
+    db_name        = optional(string),
+    db_user        = optional(string),
+    network_bridge = optional(string),
+    network_tag    = optional(number), 
   })
 }
 
@@ -87,13 +89,15 @@ variable "master_nodes_count" {
 
 variable "master_node_settings" {
   type = object({
-    cores        = optional(number),
-    sockets      = optional(number),
-    memory       = optional(number),
-    storage_type = optional(string),
-    storage_id   = optional(string),
-    disk_size    = optional(string),
-    user         = optional(string),
+    cores          = optional(number),
+    sockets        = optional(number),
+    memory         = optional(number),
+    storage_type   = optional(string),
+    storage_id     = optional(string),
+    disk_size      = optional(string),
+    user           = optional(string),
+    network_bridge = optional(string),
+    network_tag    = optional(number),
   })
 }
 
@@ -114,8 +118,11 @@ variable "node_pools" {
     storage_id   = optional(string),
     disk_size    = optional(string),
     user         = optional(string),
+    network_tag  = optional(number),
 
     template = optional(string),
+
+    network_bridge = optional(string),
   }))
 }
 variable "api_hostnames" {
@@ -128,4 +135,17 @@ variable "k3s_disable_components" {
   description = "List of components to disable. Ref: https://rancher.com/docs/k3s/latest/en/installation/install-options/server-config/#kubernetes-components"
   type        = list(string)
   default     = []
+}
+
+
+variable "http_proxy" {
+  default     = ""
+  type        = string
+  description = "http_proxy"
+}
+
+variable "nameserver" {
+  default     = ""
+  type        = string
+  description = "nameserver"
 }
